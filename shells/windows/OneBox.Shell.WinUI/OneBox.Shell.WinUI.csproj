@@ -17,8 +17,9 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
 
-    <!-- 需要加载核 DLL：由仓库根 Directory.Build.targets 复制 onebox.dll 到输出目录。 -->
+    <!-- 需要加载核 DLL 与终端 DLL：由仓库根 Directory.Build.targets 复制到输出目录。 -->
     <CopyOneBoxNative>true</CopyOneBoxNative>
+    <CopyOneBoxTerminal>true</CopyOneBoxTerminal>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\csharp\OneBox.Interop\OneBox.Interop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 终端前端资源（xterm.js 等），随输出目录复制，供 WebView2 虚拟主机加载。
+         放在 WebAssets 而非 Assets，避免与 WinUI 的包资源/PRI 处理混淆。 -->
+    <Content Include="WebAssets\terminal\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

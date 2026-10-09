@@ -36,6 +36,10 @@
                     x:Name="RefreshButton"
                     Content="刷新"
                     Click="RefreshButton_Click" />
+                <Button
+                    x:Name="OpenTerminalButton"
+                    Content="打开终端"
+                    Click="OpenTerminalButton_Click" />
             </StackPanel>
         </StackPanel>
 

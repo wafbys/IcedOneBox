@@ -45,6 +45,11 @@ public sealed partial class MainWindow : Window
         RefreshEvents();
     }
 
+    private void OpenTerminalButton_Click(object sender, RoutedEventArgs e)
+    {
+        ((App)Application.Current).OpenTerminal();
+    }
+
     private void AppendButton_Click(object sender, RoutedEventArgs e)
     {
         string eventType = EventTypeBox.Text.Trim();

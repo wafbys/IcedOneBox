@@ -14,10 +14,16 @@
       <OneBoxProfile Condition="'$(Configuration)' == 'Release'">release</OneBoxProfile>
       <OneBoxProfile Condition="'$(OneBoxProfile)' == ''">debug</OneBoxProfile>
       <OneBoxNative>$(MSBuildThisFileDirectory)target\$(OneBoxProfile)\onebox.dll</OneBoxNative>
+      <OneBoxTerminalNative>$(MSBuildThisFileDirectory)target\$(OneBoxProfile)\onebox_terminal.dll</OneBoxTerminalNative>
     </PropertyGroup>
     <Error Condition="!Exists('$(OneBoxNative)')"
            Text="未找到 $(OneBoxNative)。请先在仓库根执行 cargo build（Release 配置需 cargo build --release）。" />
     <Copy SourceFiles="$(OneBoxNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <!-- 终端是独立 DLL：只有声明需要它的项目（如 WinUI 外衣）才复制。 -->
+    <Error Condition="'$(CopyOneBoxTerminal)' == 'true' and !Exists('$(OneBoxTerminalNative)')"
+           Text="未找到 $(OneBoxTerminalNative)。请先在仓库根执行 cargo build。" />
+    <Copy SourceFiles="$(OneBoxTerminalNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true"
+          Condition="Exists('$(OneBoxTerminalNative)')" />
   </Target>
 
 </Project>

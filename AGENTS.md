@@ -21,7 +21,7 @@
 | `examples/c-smoke` | 最小 C 调用程序（FFI 链路验证） |
 | `examples/csharp-smoke` | 最小 C# 外衣（.NET，FFI 链路验证） |
 | `csharp/OneBox.Interop` | C# 绑定层：唯一 FFI 声明 + SafeHandle 生命周期 |
-| `shells/windows/OneBox.Shell.WinUI` | 非打包 WinUI 3 外衣（最小窗口，第一步） |
+| `shells/windows/OneBox.Shell.WinUI` | 非打包 WinUI 3 外衣（事件列表 + 终端窗口） |
 
 ## 五条契约（不可动摇）
 
@@ -57,6 +57,8 @@ dotnet run --project shells/windows/OneBox.Shell.WinUI  # 非打包 WinUI 3 外�
 - 跨边界数据统一用 JSON；复杂结构不用裸指针传递。**例外**：终端 PTY 的输入输出
   是裸字节流，用裸缓冲（见 `spec/90-ffi.md` 的「字节流例外」）。
 - 保持核极小。新增 API 前先确认它属于五条契约的哪一条。
+- WinUI 外衣的核生命周期跟随进程：启动时 init 一次，**最后一个窗口关闭**时才
+  shutdown + free。多窗口（如终端窗口）共享同一个核实例，不各开一个核。
 - Commit message 用中文。
 
 ## 交互铁律（不要让我猜、不要让我记）
@@ -75,7 +77,8 @@ dotnet run --project shells/windows/OneBox.Shell.WinUI  # 非打包 WinUI 3 外�
 `event_query` / `event_snapshot_latest` + `last_error` / `string_free`。
 
 终端模块（独立于核，`crates/onebox-terminal`）：spawn / write / read / resize /
-status / close / free，Windows 上走 ConPTY。
+status / close / free，Windows 上走 ConPTY；WinUI 外衣有终端窗口（WebView2 +
+xterm.js，30ms 轮询拉取输出）。
 
 未实现（仅有契约）：消息路由、权限、模块生命周期。
 按契约逐条补全，每步保证能编译、能运行、能验证。
