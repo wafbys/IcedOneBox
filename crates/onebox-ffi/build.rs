@@ -30,7 +30,6 @@ fn main() {
     if let Some(parent) = header_path.parent() {
         std::fs::create_dir_all(parent).expect("创建 include 目录失败");
     }
-    if !bindings.write_to_file(&header_path) {
-        panic!("写入头文件失败: {}", header_path.display());
-    }
+    // 注意：write_to_file 返回 false 仅表示“文件内容未变化”，属正常情况，不能当失败。
+    bindings.write_to_file(&header_path);
 }

@@ -1,4 +1,4 @@
-# 编译并链接 C 冒烟测试。
+﻿# 编译并链接 C 冒烟测试。
 #
 # 前置：先在仓库根执行 `cargo build`（或 `cargo build --release`）。
 # 该命令会生成 target/<profile>/onebox.dll 与 include/onebox.h。
@@ -8,6 +8,25 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+# cl.exe 不在普通 PowerShell 的 PATH 里；这里通过 vswhere 自动加载 VS 开发环境。
+function Enable-MsvcEnvironment {
+    if (Get-Command cl.exe -ErrorAction SilentlyContinue) { return }
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (-not (Test-Path $vswhere)) { return }
+    $vsPath = (& $vswhere -latest -products * `
+        -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+        -property installationPath | Select-Object -First 1)
+    if (-not $vsPath) { return }
+    $vsPath = $vsPath.Trim()
+    $devShell = Join-Path $vsPath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+    if (-not (Test-Path $devShell)) { return }
+    Import-Module $devShell
+    Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation `
+        -DevCmdArguments "-arch=x64 -host_arch=x64" | Out-Null
+}
+
+Enable-MsvcEnvironment
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $includeDir = Join-Path $repoRoot "include"
@@ -25,13 +44,15 @@ $staticLib = Join-Path $targetDir "onebox.lib"
 
 if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
     if ($importLib) {
-        cl.exe /nologo /W3 /I "$includeDir" "$source" /Fe:"$exe" `
+        cl.exe /nologo /W3 /utf-8 /I "$includeDir" "$source" `
+            /Fo"$PSScriptRoot\main.obj" /Fe:"$exe" `
             /link /LIBPATH:"$targetDir" "$($importLib.Name)"
         Copy-Item (Join-Path $targetDir "onebox.dll") $PSScriptRoot -Force
     }
     elseif (Test-Path $staticLib) {
         # 静态库方式：需要显式补上 Rust 静态库依赖的 Windows 系统库。
-        cl.exe /nologo /W3 /I "$includeDir" "$source" /Fe:"$exe" `
+        cl.exe /nologo /W3 /utf-8 /I "$includeDir" "$source" `
+            /Fo"$PSScriptRoot\main.obj" /Fe:"$exe" `
             /link /LIBPATH:"$targetDir" onebox.lib `
             kernel32.lib advapi32.lib ws2_32.lib userenv.lib bcrypt.lib ntdll.lib
     }

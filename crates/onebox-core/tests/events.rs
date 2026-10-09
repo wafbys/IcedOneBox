@@ -49,17 +49,26 @@ fn caller_supplied_reserved_fields_are_rejected() {
     let err = core
         .append_event(r#"{"event_type":"bad","id":"forged"}"#)
         .expect_err("提供 id 必须被拒绝");
-    assert!(matches!(err, CoreError::InvalidJson(_)), "实际错误: {err:?}");
+    assert!(
+        matches!(err, CoreError::InvalidJson(_)),
+        "实际错误: {err:?}"
+    );
 
     let err = core
         .append_event(r#"{"event_type":"bad","seq":7}"#)
         .expect_err("提供 seq 必须被拒绝");
-    assert!(matches!(err, CoreError::InvalidJson(_)), "实际错误: {err:?}");
+    assert!(
+        matches!(err, CoreError::InvalidJson(_)),
+        "实际错误: {err:?}"
+    );
 
     let err = core
         .append_event(r#"{"event_type":"bad","ts_millis":1}"#)
         .expect_err("提供 ts_millis 必须被拒绝");
-    assert!(matches!(err, CoreError::InvalidJson(_)), "实际错误: {err:?}");
+    assert!(
+        matches!(err, CoreError::InvalidJson(_)),
+        "实际错误: {err:?}"
+    );
 }
 
 #[test]
@@ -68,7 +77,10 @@ fn empty_event_type_is_rejected() {
     let err = core
         .append_event(r#"{"event_type":"  "}"#)
         .expect_err("空 event_type 必须被拒绝");
-    assert!(matches!(err, CoreError::InvalidArgument(_)), "实际错误: {err:?}");
+    assert!(
+        matches!(err, CoreError::InvalidArgument(_)),
+        "实际错误: {err:?}"
+    );
 }
 
 #[test]
@@ -109,7 +121,10 @@ fn unknown_filter_field_is_rejected() {
     let err = core
         .query_events(Some(r#"{"order":"desc"}"#))
         .expect_err("未知过滤字段必须被拒绝");
-    assert!(matches!(err, CoreError::InvalidJson(_)), "实际错误: {err:?}");
+    assert!(
+        matches!(err, CoreError::InvalidJson(_)),
+        "实际错误: {err:?}"
+    );
 }
 
 #[test]

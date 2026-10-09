@@ -1,4 +1,4 @@
-# 端到端冒烟：构建核 -> 生成头文件 -> 编译并运行 C 测试。
+﻿# 端到端冒烟：构建核 -> 生成头文件 -> 编译并运行 C 测试。
 param(
     [ValidateSet("debug", "release")]
     [string]$Profile = "debug"

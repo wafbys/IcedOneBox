@@ -29,7 +29,9 @@ impl EventInput {
         let input: EventInput =
             serde_json::from_str(json).map_err(|err| CoreError::InvalidJson(err.to_string()))?;
         if input.event_type.trim().is_empty() {
-            return Err(CoreError::InvalidArgument("event_type 不能为空".to_string()));
+            return Err(CoreError::InvalidArgument(
+                "event_type 不能为空".to_string(),
+            ));
         }
         Ok(input)
     }
@@ -91,7 +93,9 @@ impl EventFilter {
 
     /// 实际生效的返回条数上限。
     pub fn effective_limit(&self) -> u32 {
-        self.limit.unwrap_or(Self::DEFAULT_LIMIT).min(Self::MAX_LIMIT)
+        self.limit
+            .unwrap_or(Self::DEFAULT_LIMIT)
+            .min(Self::MAX_LIMIT)
     }
 }
 

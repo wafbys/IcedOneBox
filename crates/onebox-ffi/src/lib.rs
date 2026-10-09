@@ -14,7 +14,9 @@ use std::ffi::{c_char, CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Mutex;
 
-use onebox_core::{generate_id, Core, CoreConfig, CoreError};
+// 注意：本 crate 的不透明结构体也叫 `onebox_core`，会遮蔽同名依赖 crate。
+// 这里用前导 `::` 明确指向外部 crate（onebox-core），避免解析歧义。
+use ::onebox_core::{generate_id, Core, CoreConfig, CoreError};
 
 /// 核句柄。
 ///
@@ -149,7 +151,7 @@ fn into_c_string(value: String) -> *mut c_char {
 /// # Safety
 /// `config_json` 必须是 NULL 或指向以 NUL 结尾的 UTF-8 JSON 字符串。
 #[no_mangle]
-pub extern "C" fn onebox_core_init(config_json: *const c_char) -> *mut onebox_core {
+pub unsafe extern "C" fn onebox_core_init(config_json: *const c_char) -> *mut onebox_core {
     clear_last_error();
     let outcome = catch_unwind(AssertUnwindSafe(|| {
         let json = unsafe { read_opt_cstr(config_json, "config_json") }?;
@@ -176,7 +178,7 @@ pub extern "C" fn onebox_core_init(config_json: *const c_char) -> *mut onebox_co
 /// # Safety
 /// `handle` 必须是 `onebox_core_init` 返回且尚未释放的有效指针。
 #[no_mangle]
-pub extern "C" fn onebox_core_shutdown(handle: *mut onebox_core) -> onebox_rc {
+pub unsafe extern "C" fn onebox_core_shutdown(handle: *mut onebox_core) -> onebox_rc {
     clear_last_error();
     let outcome = catch_unwind(AssertUnwindSafe(|| -> onebox_rc {
         let core = match unsafe { core_ref(handle) } {
@@ -195,7 +197,7 @@ pub extern "C" fn onebox_core_shutdown(handle: *mut onebox_core) -> onebox_rc {
 /// # Safety
 /// `handle` 必须是 `onebox_core_init` 返回且尚未释放的指针，或 NULL。
 #[no_mangle]
-pub extern "C" fn onebox_core_free(handle: *mut onebox_core) -> onebox_rc {
+pub unsafe extern "C" fn onebox_core_free(handle: *mut onebox_core) -> onebox_rc {
     clear_last_error();
     if handle.is_null() {
         return onebox_rc::ONEBOX_OK;
@@ -227,7 +229,7 @@ pub extern "C" fn onebox_id_generate() -> *mut c_char {
 /// # Safety
 /// `handle` 必须有效；`event_json` 必须指向以 NUL 结尾的 UTF-8 JSON 字符串。
 #[no_mangle]
-pub extern "C" fn onebox_event_append(
+pub unsafe extern "C" fn onebox_event_append(
     handle: *mut onebox_core,
     event_json: *const c_char,
 ) -> onebox_rc {
@@ -259,7 +261,7 @@ pub extern "C" fn onebox_event_append(
 /// `handle` 必须有效；`filter_json` 必须是 NULL 或有效的 UTF-8 JSON 字符串；
 /// `out_json` 必须指向可写的 `char *` 变量。
 #[no_mangle]
-pub extern "C" fn onebox_event_query(
+pub unsafe extern "C" fn onebox_event_query(
     handle: *mut onebox_core,
     filter_json: *const c_char,
     out_json: *mut *mut c_char,
@@ -304,7 +306,7 @@ pub extern "C" fn onebox_event_query(
 /// # Safety
 /// `value` 必须是核返回且尚未释放的指针，或 NULL。
 #[no_mangle]
-pub extern "C" fn onebox_string_free(value: *mut c_char) {
+pub unsafe extern "C" fn onebox_string_free(value: *mut c_char) {
     if value.is_null() {
         return;
     }

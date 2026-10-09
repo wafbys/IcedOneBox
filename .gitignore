@@ -4,6 +4,7 @@
 *.pdb
 
 # C 冒烟测试产物
+*.obj
 examples/c-smoke/*.exe
 examples/c-smoke/*.obj
 examples/c-smoke/*.ilk

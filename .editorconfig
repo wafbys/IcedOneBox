@@ -18,3 +18,8 @@ trim_trailing_whitespace = false
 
 [*.{c,h}]
 indent_size = 4
+
+# Windows PowerShell 5.1 按系统代码页解析 .ps1；含中文的脚本必须带 BOM，
+# 才能在 5.1 与 PowerShell 7 下都被正确解析。
+[*.ps1]
+charset = utf-8-bom
