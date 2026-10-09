@@ -1,0 +1,30 @@
+# IcedOneBox 工作区
+#
+# 稳定的核 + 可替换的外衣。
+# - crates/onebox-core：核的纯逻辑，禁止 unsafe，不依赖任何平台/GUI。
+# - crates/onebox-ffi：唯一允许 unsafe 的 C ABI 层，产出 cdylib + staticlib。
+[workspace]
+resolver = "2"
+members = [
+    "crates/onebox-core",
+    "crates/onebox-ffi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "IcedOneBox：统一的数字工作台入口（稳定的核 + 可替换的外衣）"
+
+[workspace.dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+uuid = { version = "1.27.0", features = ["v7"] }
+# bundled：从源码静态编译 SQLite，核因此无运行时依赖。
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+cbindgen = "0.29.4"
+
+[profile.release]
+# 核很小，开启体积优化；外衣再按需覆盖。
+lto = true
+codegen-units = 1

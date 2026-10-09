@@ -1,0 +1,21 @@
+# 仓库内与工作区统一使用 LF，避免跨平台（Windows / macOS / Linux）换行噪声。
+* text=auto eol=lf
+
+*.rs text eol=lf
+*.toml text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.ps1 text eol=lf
+*.editorconfig text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# 二进制
+*.png binary
+*.ico binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.lib binary

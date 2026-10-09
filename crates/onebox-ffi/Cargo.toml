@@ -1,0 +1,17 @@
+[package]
+name = "onebox-ffi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "IcedOneBox 核的 C ABI 层（唯一允许 unsafe 的地方）"
+
+[lib]
+# 产出 onebox.dll（cdylib）+ onebox.lib（staticlib），头文件由 cbindgen 生成。
+name = "onebox"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+onebox-core = { path = "../onebox-core" }
+
+[build-dependencies]
+cbindgen.workspace = true

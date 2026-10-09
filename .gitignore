@@ -1,0 +1,13 @@
+# Rust 构建产物
+/target
+**/*.rs.bk
+*.pdb
+
+# C 冒烟测试产物
+examples/c-smoke/*.exe
+examples/c-smoke/*.obj
+examples/c-smoke/*.ilk
+examples/c-smoke/*.dll
+
+# 本地日志
+*.log

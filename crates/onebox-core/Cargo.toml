@@ -1,0 +1,12 @@
+[package]
+name = "onebox-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "IcedOneBox 核：纯逻辑、无 FFI、无平台依赖"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+rusqlite.workspace = true
