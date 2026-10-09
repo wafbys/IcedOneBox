@@ -19,6 +19,9 @@ pub enum CoreError {
     /// JSON 解析失败，或结构不符合契约。
     InvalidJson(String),
     /// 查询目标不存在。
+    ///
+    /// 当前没有 API 会产生该错误；保留以对齐 FFI 返回码
+    /// `ONEBOX_ERR_NOT_FOUND`，供后续契约（模块、权限等）使用。
     NotFound(String),
     /// 存储层（SQLite）失败。
     Storage(String),

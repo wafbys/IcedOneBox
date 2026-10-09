@@ -37,9 +37,10 @@
 | `event_type` | string? | 精确匹配事件类型 |
 | `source` | string? | 精确匹配事件来源 |
 | `since_seq` | i64? | 仅返回 `seq` **严格大于**该值的事件（翻页） |
-| `limit` | u32? | 返回条数上限，缺省 100，最大 1000 |
+| `limit` | u32? | 返回条数上限，缺省 100，**必须 ≥ 1**，最大 1000 |
 
-未知字段一律拒绝（`ONEBOX_ERR_INVALID_JSON`）。
+未知字段一律拒绝（`ONEBOX_ERR_INVALID_JSON`）。`limit` 为 `0` 会被拒绝
+（`ONEBOX_ERR_INVALID_ARGUMENT`）。`limit` 超过 1000 时按 1000 处理。
 
 结果始终按 `seq` **升序**，输出为信封：
 
@@ -50,8 +51,10 @@
 }
 ```
 
-- `next_since_seq`：有下一页时等于本页最后一条的 `seq`，可直接作为下次请求的
-  `since_seq`；没有更多数据时为 `null`。
+- `next_since_seq`：**确实还有更多事件时**等于本页最后一条的 `seq`，可直接作为
+  下次请求的 `since_seq`；没有更多数据时为 `null`。
+  - 实现说明：核在查询时多取一行（`limit + 1`），据此区分「恰好取满 `limit`
+    条」与「还有下一页」；因此恰好取满时 `next_since_seq` 仍为 `null`。
 
 ## 持久化表结构
 

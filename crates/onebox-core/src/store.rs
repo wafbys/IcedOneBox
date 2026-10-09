@@ -97,7 +97,12 @@ impl EventStore {
     }
 
     /// 按过滤条件读取事件，按 `seq` 升序。
-    pub fn query(&self, filter: &EventFilter) -> Result<Vec<Event>> {
+    ///
+    /// 返回 `(events, has_more)`：`events` 最多 `limit` 条；`has_more` 表示
+    /// 是否还存在更多事件。内部会多取一行来判断，因此能区分「恰好取满 limit
+    /// 条」与「还有下一页」。
+    pub fn query(&self, filter: &EventFilter) -> Result<(Vec<Event>, bool)> {
+        let limit = filter.effective_limit();
         let mut where_clauses: Vec<&str> = Vec::new();
         let mut binds: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
 
@@ -113,7 +118,8 @@ impl EventStore {
             where_clauses.push("seq > ?");
             binds.push(Box::new(since_seq));
         }
-        binds.push(Box::new(i64::from(filter.effective_limit())));
+        // 多取一行：仅用于判断是否还有下一页，返回前会截断到 limit。
+        binds.push(Box::new(i64::from(limit) + 1));
 
         let where_sql = if where_clauses.is_empty() {
             String::new()
@@ -135,7 +141,12 @@ impl EventStore {
         for row in rows {
             events.push(row?);
         }
-        Ok(events)
+
+        let has_more = events.len() as u32 > limit;
+        if has_more {
+            events.truncate(limit as usize);
+        }
+        Ok((events, has_more))
     }
 
     /// 把一行结果映射为 [`Event`]。

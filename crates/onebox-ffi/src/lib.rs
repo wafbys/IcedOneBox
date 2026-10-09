@@ -122,7 +122,9 @@ unsafe fn read_cstr(ptr: *const c_char, name: &str) -> Result<String, onebox_rc>
 /// 校验句柄非空并返回引用。
 ///
 /// # Safety
-/// `handle` 必须是 `onebox_core_init` 返回且尚未释放的有效指针。
+/// `handle` 必须是 `onebox_core_init` 返回、尚未 `onebox_core_free` 释放的有效
+/// 指针；返回的引用仅在句柄被释放之前有效，调用方必须保证此期间句柄不被释放，
+/// 也不与其他线程对该句柄的调用产生竞态（句柄内部以 `Mutex` 串行化）。
 unsafe fn core_ref<'a>(handle: *mut onebox_core) -> Result<&'a onebox_core, onebox_rc> {
     if handle.is_null() {
         set_last_error("handle 不能为 NULL");
@@ -303,10 +305,14 @@ pub unsafe extern "C" fn onebox_event_query(
 /// 适用于 `onebox_id_generate()` 与 `onebox_event_query()` 返回的指针。
 /// 传入 NULL 安全；同一指针只能释放一次。
 ///
+/// 与其他核函数一致，本函数会清空当前线程的错误文本；若需读取错误详情，请在
+/// 调用本函数之前先调用 `onebox_last_error()`。
+///
 /// # Safety
 /// `value` 必须是核返回且尚未释放的指针，或 NULL。
 #[no_mangle]
 pub unsafe extern "C" fn onebox_string_free(value: *mut c_char) {
+    clear_last_error();
     if value.is_null() {
         return;
     }
@@ -315,9 +321,14 @@ pub unsafe extern "C" fn onebox_string_free(value: *mut c_char) {
 
 /// 返回当前线程最后一次错误的文本。
 ///
-/// 指针指向线程局部缓冲，调用方**不要**释放；在下一次调用任何核函数或本函数
-/// 之前一直有效。
+/// 指针指向线程局部缓冲，调用方**不要**释放；在下一次调用其他会写入错误状态的
+/// 核函数之前一直有效（注意 `onebox_string_free()` 也会清空错误文本）。
 #[no_mangle]
 pub extern "C" fn onebox_last_error() -> *const c_char {
-    LAST_ERROR.with(|cell| cell.borrow().as_ptr())
+    match catch_unwind(AssertUnwindSafe(|| {
+        LAST_ERROR.with(|cell| cell.borrow().as_ptr())
+    })) {
+        Ok(pointer) => pointer,
+        Err(_) => std::ptr::null(),
+    }
 }

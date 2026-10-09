@@ -88,9 +88,9 @@ impl Core {
     /// 查询事件，返回 JSON 文本。
     pub fn query_events(&self, filter_json: Option<&str>) -> Result<String> {
         let filter = EventFilter::from_json(filter_json)?;
-        let limit = filter.effective_limit();
-        let events = self.store()?.query(&filter)?;
-        let next_since_seq = if events.len() as u32 == limit {
+        let (events, has_more) = self.store()?.query(&filter)?;
+        // 仅当确实还有更多事件时才给出翻页游标；恰好取满 limit 条时为 null。
+        let next_since_seq = if has_more {
             events.last().map(|event| event.seq)
         } else {
             None

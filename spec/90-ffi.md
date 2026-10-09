@@ -5,9 +5,23 @@
 - 核句柄对 C 侧是不透明类型 `onebox_core`，只能持有 `onebox_core *`。
 - `onebox_core_init()` 成功返回非空句柄，失败返回 `NULL`（详情看
   `onebox_last_error()`）。
-- `onebox_core_shutdown()` 释放资源（关闭数据库），句柄本身仍有效。
+- `onebox_core_shutdown()` 关闭数据库连接，句柄本身仍然有效，之后仍需
+  `onebox_core_free()` 释放。可重复调用。
+  - **shutdown 之后**，句柄不再能执行事件操作：`onebox_event_append()` /
+    `onebox_event_query()` 返回 `ONEBOX_ERR_INTERNAL`（错误文本“核已关闭”）。
 - `onebox_core_free()` 释放句柄内存。传入 NULL 安全；同一句柄只能释放一次。
+  未事先 `shutdown` 时，`free` 也会关闭数据库连接。
 - 典型顺序：`init` → 使用 → `shutdown` → `free`。
+
+## 初始化配置（`config_json`）
+
+- `config_json` 为 `NULL` 或空串时使用默认配置。
+- 非空时必须是 JSON 对象；**未知字段一律拒绝**（`ONEBOX_ERR_INVALID_JSON`），
+  避免“写了但没生效”。
+- 当前识别的字段只有 `db_path`：
+  - 省略时默认为当前工作目录下的 `onebox.db`；
+  - `":memory:"` 表示内存数据库（用于测试，进程退出即丢弃）；
+  - 其余按文件路径处理。
 
 ## 返回码
 
@@ -18,17 +32,35 @@
 | 0 | `ONEBOX_OK` | 成功 |
 | 1 | `ONEBOX_ERR_INVALID_ARGUMENT` | 参数缺失或非法（空指针、空 `event_type` 等） |
 | 2 | `ONEBOX_ERR_INVALID_JSON` | JSON 解析失败，或结构不符合契约 |
-| 3 | `ONEBOX_ERR_NOT_FOUND` | 查询目标不存在 |
+| 3 | `ONEBOX_ERR_NOT_FOUND` | 查询目标不存在（**当前无 API 产生此码**，保留备用） |
 | 4 | `ONEBOX_ERR_STORAGE` | 存储层失败 |
 | 5 | `ONEBOX_ERR_INTERNAL` | 未归类的内部错误 |
 | 99 | `ONEBOX_ERR_PANIC` | FFI 边界捕获到 panic |
+
+## 已实现的函数（第一步）
+
+```c
+onebox_core *onebox_core_init(const char *config_json);
+onebox_rc    onebox_core_shutdown(onebox_core *handle);
+onebox_rc    onebox_core_free(onebox_core *handle);
+char        *onebox_id_generate(void);
+onebox_rc    onebox_event_append(onebox_core *handle, const char *event_json);
+onebox_rc    onebox_event_query(onebox_core *handle, const char *filter_json,
+                                char **out_json);
+void         onebox_string_free(char *value);
+const char  *onebox_last_error(void);
+```
+
+> 头文件里类型写作 `struct onebox_core *` 与 `enum onebox_rc`，语义相同。
+> 事件的输入/输出结构见 `20-events.md`。
 
 ## 错误详情
 
 `onebox_last_error()` 返回当前线程最后一次错误的文本：
 
 - 返回 `const char *`，**不要释放**。
-- 在下一次调用任何核函数或本函数之前有效。
+- 在下一次调用其他会写入错误状态的核函数之前有效（注意 `onebox_string_free()`
+  也会清空错误文本）。
 - 每个线程各自维护，互不影响。
 
 ## 内存所有权
@@ -40,6 +72,9 @@
 | 输入字符串（`config_json`、`event_json`、`filter_json`） | 由调用方持有，核只读不改 |
 
 `onebox_string_free(NULL)` 安全；同一指针只能释放一次。
+
+注意：`onebox_string_free()` 会清空当前线程的错误文本。需要错误详情时，先调用
+`onebox_last_error()`，再释放字符串。
 
 ## 并发
 

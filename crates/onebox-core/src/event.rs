@@ -86,7 +86,14 @@ impl EventFilter {
             None => Ok(Self::default()),
             Some(text) if text.trim().is_empty() => Ok(Self::default()),
             Some(text) => {
-                serde_json::from_str(text).map_err(|err| CoreError::InvalidJson(err.to_string()))
+                let filter: Self = serde_json::from_str(text)
+                    .map_err(|err| CoreError::InvalidJson(err.to_string()))?;
+                if filter.limit == Some(0) {
+                    return Err(CoreError::InvalidArgument(
+                        "limit 必须 >= 1（缺省 100，最大 1000）".to_string(),
+                    ));
+                }
+                Ok(filter)
             }
         }
     }

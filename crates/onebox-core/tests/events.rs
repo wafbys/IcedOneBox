@@ -136,3 +136,41 @@ fn shutdown_makes_core_unusable() {
         .expect_err("关闭后不可用");
     assert!(matches!(err, CoreError::Internal(_)), "实际错误: {err:?}");
 }
+
+#[test]
+fn full_page_without_remainder_has_no_next_cursor() {
+    let mut core = memory_core();
+    for _ in 0..3 {
+        core.append_event(r#"{"event_type":"t"}"#).unwrap();
+    }
+
+    // 共 3 条，limit 恰好 = 3：取满，但没有下一页。
+    let json = core
+        .query_events(Some(r#"{"event_type":"t","limit":3}"#))
+        .expect("查询失败");
+    assert!(
+        json.contains("\"next_since_seq\":null"),
+        "恰好取满时不应给出翻页游标: {json}"
+    );
+
+    // 共 3 条，limit = 2：还有下一页，游标为本页最后一条 seq = 2。
+    let json = core
+        .query_events(Some(r#"{"event_type":"t","limit":2}"#))
+        .expect("查询失败");
+    assert!(
+        json.contains("\"next_since_seq\":2"),
+        "还有下一页时应给出游标 2: {json}"
+    );
+}
+
+#[test]
+fn zero_limit_is_rejected() {
+    let core = memory_core();
+    let err = core
+        .query_events(Some(r#"{"limit":0}"#))
+        .expect_err("limit=0 必须被拒绝");
+    assert!(
+        matches!(err, CoreError::InvalidArgument(_)),
+        "实际错误: {err:?}"
+    );
+}
