@@ -1,0 +1,23 @@
+<Project>
+
+  <!--
+    把 Rust 核产物 onebox.dll 复制到输出目录。
+
+    只有显式设置 <CopyOneBoxNative>true</CopyOneBoxNative> 的项目（需要加载核的
+    可执行程序）才生效；纯声明类库 OneBox.Interop 不需要。
+
+    本文件在仓库根，MSBuild 会从每个 .csproj 向上找到它，因此复制逻辑只有一份，
+    examples/csharp-smoke 与 shells/windows/OneBox.Shell.WinUI 共用。
+  -->
+  <Target Name="CopyOneBoxNative" AfterTargets="Build" Condition="'$(CopyOneBoxNative)' == 'true'">
+    <PropertyGroup>
+      <OneBoxProfile Condition="'$(Configuration)' == 'Release'">release</OneBoxProfile>
+      <OneBoxProfile Condition="'$(OneBoxProfile)' == ''">debug</OneBoxProfile>
+      <OneBoxNative>$(MSBuildThisFileDirectory)target\$(OneBoxProfile)\onebox.dll</OneBoxNative>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(OneBoxNative)')"
+           Text="未找到 $(OneBoxNative)。请先在仓库根执行 cargo build（Release 配置需 cargo build --release）。" />
+    <Copy SourceFiles="$(OneBoxNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

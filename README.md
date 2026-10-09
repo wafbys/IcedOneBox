@@ -14,8 +14,12 @@ IcedOneBox/
 │   ├── onebox-core/           # 核：纯逻辑，forbid(unsafe_code)，无平台依赖
 │   └── onebox-ffi/            # 唯一 unsafe 层：C ABI，产出 cdylib + staticlib
 ├── include/                   # cbindgen 生成的 onebox.h（构建时生成）
+├── csharp/OneBox.Interop/     # C# 绑定层：唯一的 FFI 声明 + 句柄生命周期
 ├── examples/c-smoke/          # 最小 C 调用程序
+├── examples/csharp-smoke/     # 最小 C# 调用程序（引用 OneBox.Interop）
+├── shells/windows/OneBox.Shell.WinUI/  # 非打包 WinUI 3 外衣（最小窗口）
 ├── tools/                     # 构建/验证脚本
+├── Directory.Build.targets    # C# 共用构建片段（复制 onebox.dll）
 ├── cbindgen.toml
 └── Cargo.toml                 # workspace
 ```
@@ -37,6 +41,9 @@ cargo test
 
 # C# 冒烟（.NET）：构建核 -> 运行控制台程序
 ./tools/csharp-smoke.ps1
+
+# WinUI 3 外衣（非打包）：构建并启动
+dotnet run --project shells/windows/OneBox.Shell.WinUI
 ```
 
 ## 当前状态

@@ -5,23 +5,15 @@
     <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- [LibraryImport] 源生成的编组代码需要 unsafe。 -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
     <AssemblyName>csharp-smoke</AssemblyName>
     <RootNamespace>IcedOneBox.Smoke</RootNamespace>
+    <!-- 需要加载核 DLL：由仓库根 Directory.Build.targets 复制 onebox.dll 到输出目录。 -->
+    <CopyOneBoxNative>true</CopyOneBoxNative>
   </PropertyGroup>
 
-  <!-- 把 Rust 核产物 onebox.dll 复制到输出目录，供 [LibraryImport] 加载。 -->
-  <Target Name="CopyOneboxNative" AfterTargets="Build">
-    <PropertyGroup>
-      <OneboxProfile Condition="'$(Configuration)' == 'Release'">release</OneboxProfile>
-      <OneboxProfile Condition="'$(Configuration)' != 'Release'">debug</OneboxProfile>
-      <OneboxNative>$(MSBuildThisFileDirectory)..\..\target\$(OneboxProfile)\onebox.dll</OneboxNative>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(OneboxNative)')"
-           Text="未找到 $(OneboxNative)。请先在仓库根执行 cargo build（Release 配置需 cargo build --release）。" />
-    <Copy SourceFiles="$(OneboxNative)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
-  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\csharp\OneBox.Interop\OneBox.Interop.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -18,6 +18,8 @@
 | `include/onebox.h` | cbindgen 生成，勿手改 |
 | `examples/c-smoke` | 最小 C 调用程序（FFI 链路验证） |
 | `examples/csharp-smoke` | 最小 C# 外衣（.NET，FFI 链路验证） |
+| `csharp/OneBox.Interop` | C# 绑定层：唯一 FFI 声明 + SafeHandle 生命周期 |
+| `shells/windows/OneBox.Shell.WinUI` | 非打包 WinUI 3 外衣（最小窗口，第一步） |
 
 ## 五条契约（不可动摇）
 
@@ -35,6 +37,7 @@ cargo test            # core 的集成测试
 cargo clippy --all-targets
 ./tools/smoke.ps1     # 构建 + 生成头文件 + 编译运行 C 测试
 ./tools/csharp-smoke.ps1  # 构建 + 运行 .NET 控制台冒烟
+dotnet run --project shells/windows/OneBox.Shell.WinUI  # 非打包 WinUI 3 外衣
 ```
 
 改核行为时：`cargo test` 绿 + `./tools/smoke.ps1` 通过。
