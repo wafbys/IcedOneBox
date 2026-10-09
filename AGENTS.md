@@ -12,6 +12,7 @@
 
 | 路径 | 角色 |
 |------|------|
+| `VISION.md` | 愿景与设计品味（为什么做、要成为什么）；**非行为规范** |
 | `spec/` | **核行为的唯一权威来源**。代码与规范冲突时以规范为准 |
 | `crates/onebox-core` | 核的纯逻辑：`#![forbid(unsafe_code)]`，无平台/GUI 依赖 |
 | `crates/onebox-ffi` | 核**唯一允许 unsafe** 的 C ABI 层：类型转换 / panic 拦截 / 错误映射 |
