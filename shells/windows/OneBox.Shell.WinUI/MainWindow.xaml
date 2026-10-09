@@ -2,19 +2,93 @@
     x:Class="OneBox.Shell.WinUI.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OneBox.Shell.WinUI"
     Title="IcedOneBox">
-    <StackPanel
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Padding="24"
-        Spacing="12">
-        <Button
-            x:Name="InitButton"
-            Content="初始化核并生成 ID"
-            Click="InitButton_Click" />
+    <Grid x:Name="RootGrid" Padding="16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <TextBlock
-            x:Name="ResultText"
-            Text="尚未初始化"
-            TextWrapping="Wrap" />
-    </StackPanel>
+            Grid.Row="0"
+            Text="追加事件"
+            Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+        <StackPanel Grid.Row="1" Spacing="8">
+            <TextBox
+                x:Name="EventTypeBox"
+                Header="事件类型"
+                Text="shell.test" />
+            <TextBox
+                x:Name="PayloadBox"
+                Header="payload（JSON，可留空）"
+                PlaceholderText="例如 [1, 2, 3] 或 42" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button
+                    x:Name="AppendButton"
+                    Content="追加"
+                    Click="AppendButton_Click"
+                    Style="{ThemeResource AccentButtonStyle}" />
+                <Button
+                    x:Name="RefreshButton"
+                    Content="刷新"
+                    Click="RefreshButton_Click" />
+            </StackPanel>
+        </StackPanel>
+
+        <ListView
+            x:Name="EventList"
+            Grid.Row="2"
+            SelectionMode="None"
+            Visibility="Collapsed">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:EventViewModel">
+                    <StackPanel Padding="0,6" Spacing="2">
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="0"
+                                Text="{x:Bind SeqLabel}"
+                                FontFamily="Consolas"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock
+                                Grid.Column="1"
+                                Text="{x:Bind EventType}"
+                                FontWeight="SemiBold"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Column="2"
+                                Text="{x:Bind Timestamp}"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </Grid>
+                        <TextBlock
+                            Text="{x:Bind DetailLine}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <TextBlock
+            x:Name="EmptyHint"
+            Grid.Row="2"
+            Text="暂无事件"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <TextBlock
+            x:Name="StatusText"
+            Grid.Row="3"
+            TextWrapping="Wrap"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Grid>
 </Window>
