@@ -62,8 +62,8 @@ cargo clippy --all-targets
 
 ## 当前进度
 
-第一步（已实现）：`core_init` / `core_shutdown` / `id_generate` /
-`event_append` / `event_query` + `last_error` / `string_free`。
+已实现：`core_init` / `core_shutdown` / `id_generate` / `event_append` /
+`event_query` / `event_snapshot_latest` + `last_error` / `string_free`。
 
-未实现（仅有契约）：消息路由、权限、模块生命周期、事件快照。
+未实现（仅有契约）：消息路由、权限、模块生命周期。
 按契约逐条补全，每步保证能编译、能运行、能验证。

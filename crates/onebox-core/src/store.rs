@@ -149,6 +149,29 @@ impl EventStore {
         Ok((events, has_more))
     }
 
+    /// 返回指定 reducer 的最新快照事件。
+    ///
+    /// 仅在 `event_type == "core.snapshot"` 的事件中按 `payload.reducer_id` 精确
+    /// 匹配，取 `seq` 最大者。以下事件一律**跳过**（不报错）：
+    /// 1. `payload` 不是 JSON 对象；
+    /// 2. `payload` 缺少 `reducer_id`；
+    /// 3. `reducer_id` 不是字符串；
+    /// 4. `reducer_id` 与查询值不相等。
+    pub fn latest_snapshot(&self, reducer_id: &str) -> Result<Option<Event>> {
+        let mut statement = self.conn.prepare(
+            "SELECT seq, id, event_type, source, ts_millis, payload \
+             FROM events WHERE event_type = 'core.snapshot' ORDER BY seq DESC",
+        )?;
+        let rows = statement.query_map([], Self::row_to_event)?;
+        for row in rows {
+            let event = row?;
+            if reducer_id_of(&event.payload) == Some(reducer_id) {
+                return Ok(Some(event));
+            }
+        }
+        Ok(None)
+    }
+
     /// 把一行结果映射为 [`Event`]。
     fn row_to_event(row: &Row<'_>) -> rusqlite::Result<Event> {
         let payload_text: String = row.get(5)?;
@@ -164,4 +187,15 @@ impl EventStore {
             payload,
         })
     }
+}
+
+/// 从快照 payload 中读取 `reducer_id`。
+///
+/// 仅当 payload 是 JSON 对象且 `reducer_id` 是字符串时返回其值；其余返回 `None`，
+/// 调用方据此跳过该事件（不报错）。
+fn reducer_id_of(payload: &serde_json::Value) -> Option<&str> {
+    payload
+        .as_object()
+        .and_then(|object| object.get("reducer_id"))
+        .and_then(|value| value.as_str())
 }

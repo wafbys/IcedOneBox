@@ -1,8 +1,6 @@
 # 30 · 事件快照
 
-> 状态：**生效**（契约已冻结）。
-> 注意：`onebox_event_snapshot_latest` 的实现**尚未落地**；本文件先冻结契约，
-> 待观察后再决定何时实现。
+> 状态：**生效**（契约已冻结，`onebox_event_snapshot_latest` 已实现）。
 
 ## 定位
 
@@ -69,7 +67,13 @@ onebox_rc onebox_event_snapshot_latest(onebox_core *handle,
 语义：返回该 `reducer_id` 下 `seq` 最大的 `core.snapshot` 事件。
 
 - 匹配方式：在 `event_type == "core.snapshot"` 的事件中，按 `payload.reducer_id`
-  精确匹配。核**只读取 `reducer_id` 这一个字段用于匹配**，绝不读取或解释 `state`。
+  精确匹配，取 `seq` 最大者。核**只读取 `reducer_id` 这一个字段用于匹配**，绝不
+  读取或解释 `state`。
+- 以下事件一律**跳过**（不报错，继续找下一条）：
+  1. `payload` 不是 JSON 对象；
+  2. `payload` 缺少 `reducer_id`；
+  3. `reducer_id` 不是字符串；
+  4. `reducer_id` 与查询值不相等。
 - 成功：`ONEBOX_OK`，`*out_json` 写入该事件的完整记录（字段与
   `onebox_event_query` 结果中的 event 一致：`seq/id/event_type/source/ts_millis/payload`），
   由调用方用 `onebox_string_free()` 释放。
@@ -77,8 +81,8 @@ onebox_rc onebox_event_snapshot_latest(onebox_core *handle,
   若存在 `core.snapshot` 事件但都不匹配该 `reducer_id`，同样返回 `NOT_FOUND`。
 - 参数非法（`handle` 或 `reducer_id` 为空）：`ONEBOX_ERR_INVALID_ARGUMENT`。
 
-> 外衣若写过 payload 不合契约的快照（缺 `reducer_id`、非对象等），核不会报错，
-> 但那样的快照永远不会被任何 `reducer_id` 检索到。外衣自负其责。
+> 外衣若写过不合契约的快照，核不会报错，但那样的快照永远不会被任何
+> `reducer_id` 检索到。外衣自负其责。
 
 ## 重放流程（约定）
 

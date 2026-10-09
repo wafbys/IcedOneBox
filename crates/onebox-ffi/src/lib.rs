@@ -300,6 +300,52 @@ pub unsafe extern "C" fn onebox_event_query(
     outcome.unwrap_or_else(|_| on_panic())
 }
 
+/// 查询指定 reducer 的最新快照事件。
+///
+/// 成功时把该事件的完整 JSON 写入 `out_json`（调用方用 `onebox_string_free()`
+/// 释放）；无匹配快照时返回 `ONEBOX_ERR_NOT_FOUND` 且 `*out_json` 保持 NULL。
+///
+/// # Safety
+/// `handle` 必须有效；`reducer_id` 必须指向以 NUL 结尾的 UTF-8 字符串；
+/// `out_json` 必须指向可写的 `char *` 变量。
+#[no_mangle]
+pub unsafe extern "C" fn onebox_event_snapshot_latest(
+    handle: *mut onebox_core,
+    reducer_id: *const c_char,
+    out_json: *mut *mut c_char,
+) -> onebox_rc {
+    clear_last_error();
+    if out_json.is_null() {
+        set_last_error("out_json 不能为 NULL");
+        return onebox_rc::ONEBOX_ERR_INVALID_ARGUMENT;
+    }
+    unsafe { *out_json = std::ptr::null_mut() };
+
+    let outcome = catch_unwind(AssertUnwindSafe(|| -> onebox_rc {
+        let core = match unsafe { core_ref(handle) } {
+            Ok(core) => core,
+            Err(code) => return code,
+        };
+        let reducer_id = match unsafe { read_cstr(reducer_id, "reducer_id") } {
+            Ok(reducer_id) => reducer_id,
+            Err(code) => return code,
+        };
+        let guard = core.inner.lock().unwrap_or_else(|err| err.into_inner());
+        match guard.snapshot_latest(&reducer_id) {
+            Ok(json) => {
+                let pointer = into_c_string(json);
+                if pointer.is_null() {
+                    return onebox_rc::ONEBOX_ERR_INTERNAL;
+                }
+                unsafe { *out_json = pointer };
+                onebox_rc::ONEBOX_OK
+            }
+            Err(err) => record(&err),
+        }
+    }));
+    outcome.unwrap_or_else(|_| on_panic())
+}
+
 /// 释放由核分配的字符串。
 ///
 /// 适用于 `onebox_id_generate()` 与 `onebox_event_query()` 返回的指针。

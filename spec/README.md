@@ -18,8 +18,9 @@
 
 - 只有在本目录明确写下的行为才算契约；其余一律视为未实现。
 - 第一步已实现的范围：`onebox_core_init` / `onebox_core_shutdown` /
-  `onebox_id_generate` / `onebox_event_append` / `onebox_event_query`，
-  外加支撑函数 `onebox_last_error` / `onebox_string_free`。
+  `onebox_id_generate` / `onebox_event_append` / `onebox_event_query` /
+  `onebox_event_snapshot_latest`，外加支撑函数 `onebox_last_error` /
+  `onebox_string_free`。
 - 消息路由、权限、模块生命周期三组契约目前**只有约定、没有实现**，
   见 `01-contracts.md` 中的对应章节。
 

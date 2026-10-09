@@ -115,6 +115,20 @@ enum onebox_rc onebox_event_query(struct onebox_core *handle,
                                   char **out_json);
 
 /**
+ * 查询指定 reducer 的最新快照事件。
+ *
+ * 成功时把该事件的完整 JSON 写入 `out_json`（调用方用 `onebox_string_free()`
+ * 释放）；无匹配快照时返回 `ONEBOX_ERR_NOT_FOUND` 且 `*out_json` 保持 NULL。
+ *
+ * # Safety
+ * `handle` 必须有效；`reducer_id` 必须指向以 NUL 结尾的 UTF-8 字符串；
+ * `out_json` 必须指向可写的 `char *` 变量。
+ */
+enum onebox_rc onebox_event_snapshot_latest(struct onebox_core *handle,
+                                            const char *reducer_id,
+                                            char **out_json);
+
+/**
  * 释放由核分配的字符串。
  *
  * 适用于 `onebox_id_generate()` 与 `onebox_event_query()` 返回的指针。

@@ -32,12 +32,12 @@
 | 0 | `ONEBOX_OK` | 成功 |
 | 1 | `ONEBOX_ERR_INVALID_ARGUMENT` | 参数缺失或非法（空指针、空 `event_type` 等） |
 | 2 | `ONEBOX_ERR_INVALID_JSON` | JSON 解析失败，或结构不符合契约 |
-| 3 | `ONEBOX_ERR_NOT_FOUND` | 查询目标不存在（**当前无 API 产生此码**，保留备用） |
+| 3 | `ONEBOX_ERR_NOT_FOUND` | 查询目标不存在（如 `onebox_event_snapshot_latest` 无匹配快照） |
 | 4 | `ONEBOX_ERR_STORAGE` | 存储层失败 |
 | 5 | `ONEBOX_ERR_INTERNAL` | 未归类的内部错误 |
 | 99 | `ONEBOX_ERR_PANIC` | FFI 边界捕获到 panic |
 
-## 已实现的函数（第一步）
+## 已实现的函数
 
 ```c
 onebox_core *onebox_core_init(const char *config_json);
@@ -47,12 +47,14 @@ char        *onebox_id_generate(void);
 onebox_rc    onebox_event_append(onebox_core *handle, const char *event_json);
 onebox_rc    onebox_event_query(onebox_core *handle, const char *filter_json,
                                 char **out_json);
+onebox_rc    onebox_event_snapshot_latest(onebox_core *handle, const char *reducer_id,
+                                          char **out_json);
 void         onebox_string_free(char *value);
 const char  *onebox_last_error(void);
 ```
 
 > 头文件里类型写作 `struct onebox_core *` 与 `enum onebox_rc`，语义相同。
-> 事件的输入/输出结构见 `20-events.md`。
+> 事件的输入/输出结构见 `20-events.md`，快照见 `30-snapshots.md`。
 
 ## 错误详情
 
@@ -67,7 +69,7 @@ const char  *onebox_last_error(void);
 
 | 场景 | 规则 |
 |------|------|
-| 核返回的字符串（`onebox_id_generate`、`onebox_event_query` 的 `out_json`） | 由核分配，调用方用 `onebox_string_free()` 释放 |
+| 核返回的字符串（`onebox_id_generate`、`onebox_event_query` / `onebox_event_snapshot_latest` 的 `out_json`） | 由核分配，调用方用 `onebox_string_free()` 释放 |
 | `onebox_last_error()` 的返回值 | 线程局部缓冲，**不要**释放 |
 | 输入字符串（`config_json`、`event_json`、`filter_json`） | 由调用方持有，核只读不改 |
 

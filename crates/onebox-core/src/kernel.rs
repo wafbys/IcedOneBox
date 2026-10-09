@@ -102,6 +102,22 @@ impl Core {
         .to_json()
     }
 
+    /// 返回指定 reducer 的最新快照事件，序列化为 JSON 文本。
+    ///
+    /// 无匹配快照时返回 [`CoreError::NotFound`]。
+    pub fn snapshot_latest(&self, reducer_id: &str) -> Result<String> {
+        if reducer_id.trim().is_empty() {
+            return Err(CoreError::InvalidArgument(
+                "reducer_id 不能为空".to_string(),
+            ));
+        }
+        let event = self
+            .store()?
+            .latest_snapshot(reducer_id)?
+            .ok_or_else(|| CoreError::NotFound(format!("reducer_id=\"{reducer_id}\" 没有快照")))?;
+        serde_json::to_string(&event).map_err(|err| CoreError::Internal(err.to_string()))
+    }
+
     fn store(&self) -> Result<&EventStore> {
         self.store
             .as_ref()

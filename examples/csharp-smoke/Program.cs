@@ -34,6 +34,9 @@ internal static partial class NativeCore
     [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
     internal static partial OneboxRc onebox_event_query(IntPtr handle, string? filterJson, out IntPtr outJson);
 
+    [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial OneboxRc onebox_event_snapshot_latest(IntPtr handle, string reducerId, out IntPtr outJson);
+
     [LibraryImport(Library)]
     internal static partial void onebox_string_free(IntPtr value);
 
@@ -106,6 +109,31 @@ internal static class Program
         {
             Console.WriteLine($"       last_error: {LastError()}");
         }
+
+        // 4b. 快照链路：写一条 core.snapshot -> 查最新快照 -> 校验 payload。
+        rc = NativeCore.onebox_event_append(
+            core,
+            "{\"event_type\":\"core.snapshot\",\"source\":\"csharp-smoke\",\"payload\":{\"reducer_id\":\"demo\",\"covers_seq\":1,\"state\":{\"count\":7}}}");
+        Check(rc == OneboxRc.Ok, "onebox_event_append 写入快照事件");
+
+        rc = NativeCore.onebox_event_snapshot_latest(core, "demo", out IntPtr snapPtr);
+        Check(rc == OneboxRc.Ok && snapPtr != IntPtr.Zero, "onebox_event_snapshot_latest");
+        if (rc == OneboxRc.Ok && snapPtr != IntPtr.Zero)
+        {
+            string? snapshot = ReadNativeString(snapPtr);
+            Console.WriteLine($"       snapshot: {snapshot}");
+            Check(snapshot is not null && snapshot.Contains("\"reducer_id\":\"demo\""), "快照含 reducer_id");
+            Check(snapshot is not null && snapshot.Contains("\"count\":7"), "快照 state 正确");
+        }
+        else
+        {
+            Console.WriteLine($"       last_error: {LastError()}");
+        }
+
+        // 4c. 无快照的 reducer 必须返回 NOT_FOUND。
+        rc = NativeCore.onebox_event_snapshot_latest(core, "nope", out IntPtr missingPtr);
+        Check(rc == OneboxRc.NotFound && missingPtr == IntPtr.Zero,
+            $"无快照返回 NOT_FOUND（返回 {(int)rc}）");
 
         // 5. 关闭并释放。
         Check(NativeCore.onebox_core_shutdown(core) == OneboxRc.Ok, "onebox_core_shutdown");

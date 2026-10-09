@@ -41,16 +41,17 @@ cargo test
 
 ## 当前状态
 
-开发核。第一步已实现：
+开发核。已实现：
 
 - `onebox_core_init` / `onebox_core_shutdown`
 - `onebox_id_generate`
 - `onebox_event_append` / `onebox_event_query`
+- `onebox_event_snapshot_latest`
 - 支撑函数：`onebox_last_error` / `onebox_string_free`
 
-解析：SQLite 事件日志（`rusqlite` bundled，静态编译，无运行时依赖）。
+持久化：SQLite 事件日志（`rusqlite` bundled，静态编译，无运行时依赖）。
 
-未实现（仅有契约约定）：消息路由、权限、模块生命周期、事件快照。
+未实现（仅有契约约定）：消息路由、权限、模块生命周期。
 
 ## 契约摘要
 
