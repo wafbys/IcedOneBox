@@ -14,8 +14,10 @@
 |------|------|
 | `spec/` | **核行为的唯一权威来源**。代码与规范冲突时以规范为准 |
 | `crates/onebox-core` | 核的纯逻辑：`#![forbid(unsafe_code)]`，无平台/GUI 依赖 |
-| `crates/onebox-ffi` | **唯一允许 unsafe** 的 C ABI 层：类型转换 / panic 拦截 / 错误映射 |
+| `crates/onebox-ffi` | 核**唯一允许 unsafe** 的 C ABI 层：类型转换 / panic 拦截 / 错误映射 |
+| `crates/onebox-terminal` | 终端模块（独立于核）：PTY 会话管理，自己的 C ABI；unsafe 仅限其 FFI 层 |
 | `include/onebox.h` | cbindgen 生成，勿手改 |
+| `include/onebox_terminal.h` | cbindgen 生成，勿手改 |
 | `examples/c-smoke` | 最小 C 调用程序（FFI 链路验证） |
 | `examples/csharp-smoke` | 最小 C# 外衣（.NET，FFI 链路验证） |
 | `csharp/OneBox.Interop` | C# 绑定层：唯一 FFI 声明 + SafeHandle 生命周期 |
@@ -32,8 +34,9 @@
 ## 构建与验证
 
 ```powershell
-cargo build           # 生成 dll/lib 与 include/onebox.h
+cargo build           # 生成 dll/lib 与 include/onebox.h、include/onebox_terminal.h
 cargo test            # core 的集成测试
+cargo test -p onebox-terminal  # 终端模块的集成测试
 cargo clippy --all-targets
 ./tools/smoke.ps1     # 构建 + 生成头文件 + 编译运行 C 测试
 ./tools/csharp-smoke.ps1  # 构建 + 运行 .NET 控制台冒烟
@@ -45,11 +48,14 @@ dotnet run --project shells/windows/OneBox.Shell.WinUI  # 非打包 WinUI 3 外�
 ## 硬性规则
 
 - 规范先行：改行为先改 `spec/`，再改代码；代码注释中文，标识符英文。
-- `onebox-core` 内**禁止** unsafe；所有 unsafe 集中在 `onebox-ffi`。
+- `onebox-core` 内**禁止** unsafe；核的 unsafe 集中在 `onebox-ffi`。
+- `onebox-terminal` 的 unsafe 仅限其 FFI 层（`src/lib.rs` / `src/ffi.rs`），
+  `src/session.rs` 保持 `#![forbid(unsafe_code)]`。
 - 所有导出 C 函数加 `onebox_` 前缀，用 `catch_unwind` 包裹，错误走返回码 +
   `onebox_last_error()`。
 - 事件只追加，不修改、不删除。`id` / `seq` / 时间戳由核生成，调用方提供即拒绝。
-- 跨边界数据统一用 JSON；复杂结构不用裸指针传递。
+- 跨边界数据统一用 JSON；复杂结构不用裸指针传递。**例外**：终端 PTY 的输入输出
+  是裸字节流，用裸缓冲（见 `spec/90-ffi.md` 的「字节流例外」）。
 - 保持核极小。新增 API 前先确认它属于五条契约的哪一条。
 - Commit message 用中文。
 
@@ -67,6 +73,9 @@ dotnet run --project shells/windows/OneBox.Shell.WinUI  # 非打包 WinUI 3 外�
 
 已实现：`core_init` / `core_shutdown` / `id_generate` / `event_append` /
 `event_query` / `event_snapshot_latest` + `last_error` / `string_free`。
+
+终端模块（独立于核，`crates/onebox-terminal`）：spawn / write / read / resize /
+status / close / free，Windows 上走 ConPTY。
 
 未实现（仅有契约）：消息路由、权限、模块生命周期。
 按契约逐条补全，每步保证能编译、能运行、能验证。

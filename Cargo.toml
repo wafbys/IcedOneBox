@@ -8,6 +8,7 @@ resolver = "2"
 members = [
     "crates/onebox-core",
     "crates/onebox-ffi",
+    "crates/onebox-terminal",
 ]
 
 [workspace.package]
@@ -22,6 +23,8 @@ serde_json = "1.0.151"
 uuid = { version = "1.27.0", features = ["v7"] }
 # bundled：从源码静态编译 SQLite，核因此无运行时依赖。
 rusqlite = { version = "0.40.2", features = ["bundled"] }
+# 终端模块：跨平台 PTY。同步 IO，不引入 async runtime。
+portable-pty = "0.9"
 cbindgen = "0.29.4"
 
 [profile.release]

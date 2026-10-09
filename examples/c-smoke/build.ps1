@@ -38,15 +38,18 @@ if (-not (Test-Path (Join-Path $includeDir "onebox.h"))) {
     throw "未找到 include\onebox.h，请先在仓库根执行 cargo build"
 }
 
-# 优先使用 cdylib 的导入库，避免手动补齐 Windows 系统链接库。
-$importLib = Get-ChildItem $targetDir -Filter "*.dll.lib" -ErrorAction SilentlyContinue | Select-Object -First 1
+# 优先使用核 cdylib 的导入库，避免手动补齐 Windows 系统链接库。
+# 必须明确锁定 onebox.dll.lib：target 目录里还有 onebox_terminal.dll.lib，
+# 用 *.dll.lib 通配会选到错误的库。
+$importLib = Join-Path $targetDir "onebox.dll.lib"
+if (-not (Test-Path $importLib)) { $importLib = $null }
 $staticLib = Join-Path $targetDir "onebox.lib"
 
 if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
     if ($importLib) {
         cl.exe /nologo /W3 /utf-8 /I "$includeDir" "$source" `
             /Fo"$PSScriptRoot\main.obj" /Fe:"$exe" `
-            /link /LIBPATH:"$targetDir" "$($importLib.Name)"
+            /link /LIBPATH:"$targetDir" "$importLib"
         Copy-Item (Join-Path $targetDir "onebox.dll") $PSScriptRoot -Force
     }
     elseif (Test-Path $staticLib) {

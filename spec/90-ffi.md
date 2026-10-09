@@ -100,3 +100,13 @@ const char  *onebox_last_error(void);
 
 所有导出函数加 `onebox_` 前缀。所有跨边界数据用 C 兼容类型；
 复杂数据统一用 JSON 字符串。
+
+## 字节流例外（终端模块）
+
+上面「复杂数据统一用 JSON」**不适用于终端模块的 PTY 输入输出**。PTY 是裸字节流：
+可能包含非 UTF-8 字节、VT 转义序列、被读操作截断的多字节字符；若套进 JSON 字符串
+既慢又易错。因此 `include/onebox_terminal.h` 的 `read` / `write` 使用裸缓冲
+（`uint8_t *` + 长度），只有 `spawn` 的配置走 JSON。
+
+终端是独立模块：头文件与 `onebox.h` 分开（`ONEBOX_TERMINAL_H`），两者互不依赖；
+`onebox_terminal_rc` 的数值与 `onebox_rc` 刻意对齐，便于外衣复用同一个枚举。

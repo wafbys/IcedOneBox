@@ -1,0 +1,21 @@
+[package]
+name = "onebox-terminal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "IcedOneBox 终端模块：PTY 会话管理，暴露 C ABI（独立于核）"
+
+[lib]
+# 产出 onebox_terminal.dll（cdylib）+ onebox_terminal.lib（staticlib），
+# 头文件由 cbindgen 生成到 include/onebox_terminal.h。
+# rlib 仅用于集成测试（tests/ 需要链接本 crate）；不影响 DLL 产物。
+name = "onebox_terminal"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+portable-pty.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[build-dependencies]
+cbindgen.workspace = true
