@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.UI.Xaml;
 using OneBox.Interop;
 
@@ -30,9 +31,22 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // 内存库：先跑通界面链路，暂不落盘（持久化留到外衣稳定之后）。
-        Core = OneBoxCore.Init("{\"db_path\":\":memory:\"}");
+        Core = OneBoxCore.Init(BuildCoreConfig());
         TrackWindow(new MainWindow());
+    }
+
+    /// <summary>
+    /// 构造核配置：事件日志落在 <c>%LocalAppData%\IcedOneBox\onebox.db</c>。
+    /// SQLite 的 WAL 模式会在同目录产生 <c>-wal</c> / <c>-shm</c> 文件，属正常现象。
+    /// </summary>
+    private static string BuildCoreConfig()
+    {
+        string directory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "IcedOneBox");
+        Directory.CreateDirectory(directory);
+        string dbPath = Path.Combine(directory, "onebox.db");
+        return JsonSerializer.Serialize(new { db_path = dbPath });
     }
 
     /// <summary>打开一个新的终端窗口。</summary>
