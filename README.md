@@ -34,6 +34,9 @@ cargo test
 
 # 端到端冒烟：构建核 -> 生成头文件 -> 编译并运行 C 测试
 ./tools/smoke.ps1
+
+# C# 冒烟（.NET）：构建核 -> 运行控制台程序
+./tools/csharp-smoke.ps1
 ```
 
 ## 当前状态

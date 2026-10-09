@@ -17,6 +17,7 @@
 | `crates/onebox-ffi` | **唯一允许 unsafe** 的 C ABI 层：类型转换 / panic 拦截 / 错误映射 |
 | `include/onebox.h` | cbindgen 生成，勿手改 |
 | `examples/c-smoke` | 最小 C 调用程序（FFI 链路验证） |
+| `examples/csharp-smoke` | 最小 C# 外衣（.NET，FFI 链路验证） |
 
 ## 五条契约（不可动摇）
 
@@ -33,6 +34,7 @@ cargo build           # 生成 dll/lib 与 include/onebox.h
 cargo test            # core 的集成测试
 cargo clippy --all-targets
 ./tools/smoke.ps1     # 构建 + 生成头文件 + 编译运行 C 测试
+./tools/csharp-smoke.ps1  # 构建 + 运行 .NET 控制台冒烟
 ```
 
 改核行为时：`cargo test` 绿 + `./tools/smoke.ps1` 通过。

@@ -10,5 +10,9 @@ examples/c-smoke/*.obj
 examples/c-smoke/*.ilk
 examples/c-smoke/*.dll
 
+# .NET 构建产物
+examples/csharp-smoke/bin/
+examples/csharp-smoke/obj/
+
 # 本地日志
 *.log
