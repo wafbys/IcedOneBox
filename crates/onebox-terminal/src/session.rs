@@ -24,6 +24,13 @@ use crate::error::{Result, TerminalError};
 /// 输出缓冲上限（字节）。超过后读线程阻塞，等待 UI 取走。
 const OUTPUT_BUFFER_LIMIT: usize = 4 * 1024 * 1024;
 
+/// 默认程序。Windows 上的 PowerShell；客场（macOS/Linux）需另行配置。
+const DEFAULT_PROGRAM: &str = "powershell.exe";
+/// 默认终端列数。
+const DEFAULT_COLS: u16 = 80;
+/// 默认终端行数。
+const DEFAULT_ROWS: u16 = 24;
+
 /// 关闭时等待读线程退出的上限；超时则放弃 join，避免阻塞 UI。
 const READER_JOIN_TIMEOUT: Duration = Duration::from_secs(2);
 
@@ -43,13 +50,6 @@ pub struct SpawnConfig {
 }
 
 impl SpawnConfig {
-    /// 默认程序：Windows 上的 PowerShell。
-    pub const DEFAULT_PROGRAM: &'static str = "powershell.exe";
-    /// 默认列数。
-    pub const DEFAULT_COLS: u16 = 80;
-    /// 默认行数。
-    pub const DEFAULT_ROWS: u16 = 24;
-
     /// 从 JSON 文本解析。`None` 或空串表示全部使用默认值。
     ///
     /// 未知字段一律拒绝（与核的严格解析风格一致），避免「写了但没生效」。
@@ -109,15 +109,15 @@ impl Default for RawConfig {
 }
 
 fn default_program() -> String {
-    SpawnConfig::DEFAULT_PROGRAM.to_string()
+    DEFAULT_PROGRAM.to_string()
 }
 
 fn default_cols() -> u16 {
-    SpawnConfig::DEFAULT_COLS
+    DEFAULT_COLS
 }
 
 fn default_rows() -> u16 {
-    SpawnConfig::DEFAULT_ROWS
+    DEFAULT_ROWS
 }
 
 /// 一个 PTY 会话。

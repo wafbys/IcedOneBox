@@ -78,13 +78,6 @@
         });
     }
 
-    document.addEventListener("keydown", (event) => {
-        // 平台快捷键由宿主 / WebView2 处理；这里只把焦点保持在终端。
-        if (event.key === "Escape" && document.activeElement !== term.textarea) {
-            term.focus();
-        }
-    });
-
     window.addEventListener("resize", scheduleFit);
     if (window.ResizeObserver) {
         new ResizeObserver(scheduleFit).observe(document.getElementById("terminal"));

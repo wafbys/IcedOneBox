@@ -115,7 +115,7 @@ public sealed class TerminalSession : SafeHandleZeroOrMinusOneIsInvalid
 
     protected override bool ReleaseHandle()
     {
-        NativeTerminal.onebox_terminal_free(handle);
+        _ = NativeTerminal.onebox_terminal_free(handle);
         return true;
     }
 

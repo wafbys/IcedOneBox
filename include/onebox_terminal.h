@@ -1,4 +1,12 @@
 /* IcedOneBox 终端模块 C ABI 头文件 */
+/*
+ * 前置条件（Windows / ConPTY）：本模块只负责 PTY，不做终端仿真。ConPTY 建立后
+ * 会发出 ESC[6n（DSR，查询光标位置），消费者必须应答 CPR（ESC[row;colR），
+ * 否则子进程输出不会继续。xterm.js 等真实终端会自动应答；非终端消费者需自行应答。
+ *
+ * 读取语义：onebox_terminal_read() 返回 OK 且 *out_len 为 0，表示「当前无数据」，
+ * 不代表流已结束；是否结束请用 onebox_terminal_status() 判断。
+ */
 
 #ifndef ONEBOX_TERMINAL_H
 #define ONEBOX_TERMINAL_H
@@ -10,16 +18,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-/**
- * 默认列数。
- */
-#define SpawnConfig_DEFAULT_COLS 80
-
-/**
- * 默认行数。
- */
-#define SpawnConfig_DEFAULT_ROWS 24
 
 /**
  * 终端模块返回码。数值与核的 `onebox_rc` 对齐（0/1/2/5/99）；
@@ -132,10 +130,13 @@ enum onebox_terminal_rc onebox_terminal_close(struct onebox_terminal *handle);
 /**
  * 释放终端句柄。传入 NULL 安全；同一句柄只能释放一次。
  *
+ * 与 `onebox_core_free` 一致，本函数返回返回码（正常路径为
+ * `ONEBOX_TERMINAL_OK`）。drop 会关闭会话（`Session::drop` → `close`）。
+ *
  * # Safety
  * `handle` 必须是 `onebox_terminal_spawn` 返回且尚未释放的指针，或 NULL。
  */
-void onebox_terminal_free(struct onebox_terminal *handle);
+enum onebox_terminal_rc onebox_terminal_free(struct onebox_terminal *handle);
 
 /**
  * 返回当前线程最后一次错误的文本。

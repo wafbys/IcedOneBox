@@ -32,7 +32,7 @@ internal static partial class NativeTerminal
     internal static partial OneboxRc onebox_terminal_close(IntPtr handle);
 
     [LibraryImport(Library)]
-    internal static partial void onebox_terminal_free(IntPtr handle);
+    internal static partial OneboxRc onebox_terminal_free(IntPtr handle);
 
     /// <summary>返回线程局部指针，归库所有，<b>不要</b>释放。</summary>
     [LibraryImport(Library)]

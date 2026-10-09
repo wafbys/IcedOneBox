@@ -6,7 +6,15 @@
 language = "C"
 include_guard = "ONEBOX_TERMINAL_H"
 autogen_warning = "/* 此文件由 cbindgen 自动生成，请勿手动编辑。 */"
-header = "/* IcedOneBox 终端模块 C ABI 头文件 */"
+header = """/* IcedOneBox 终端模块 C ABI 头文件 */
+/*
+ * 前置条件（Windows / ConPTY）：本模块只负责 PTY，不做终端仿真。ConPTY 建立后
+ * 会发出 ESC[6n（DSR，查询光标位置），消费者必须应答 CPR（ESC[row;colR），
+ * 否则子进程输出不会继续。xterm.js 等真实终端会自动应答；非终端消费者需自行应答。
+ *
+ * 读取语义：onebox_terminal_read() 返回 OK 且 *out_len 为 0，表示「当前无数据」，
+ * 不代表流已结束；是否结束请用 onebox_terminal_status() 判断。
+ */"""
 documentation = true
 documentation_style = "doxy"
 cpp_compat = true

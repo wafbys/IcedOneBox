@@ -1,10 +1,12 @@
 <Project>
 
   <!--
-    把 Rust 核产物 onebox.dll 复制到输出目录。
+    把 Rust 产物 onebox.dll（核）与 onebox_terminal.dll（终端）复制到输出目录。
 
-    只有显式设置 <CopyOneBoxNative>true</CopyOneBoxNative> 的项目（需要加载核的
-    可执行程序）才生效；纯声明类库 OneBox.Interop 不需要。
+    - onebox.dll：显式设置 <CopyOneBoxNative>true</CopyOneBoxNative> 的项目才生效；
+      纯声明类库 OneBox.Interop 不需要。
+    - onebox_terminal.dll：设置 <CopyOneBoxTerminal>true</CopyOneBoxTerminal> 才生效，
+      目前只有 WinUI 外衣需要。
 
     本文件在仓库根，MSBuild 会从每个 .csproj 向上找到它，因此复制逻辑只有一份，
     examples/csharp-smoke 与 shells/windows/OneBox.Shell.WinUI 共用。

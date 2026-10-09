@@ -1,4 +1,4 @@
-﻿# 端到端冒烟：构建核 -> 生成头文件 -> 编译并运行 C 测试。
+﻿# 端到端冒烟：构建核与终端 -> 生成头文件 -> 编译并运行 C 测试。
 #
 # 注意：这里刻意不用 $ErrorActionPreference = "Stop"。cargo 会把进度写到
 # stderr，依赖 PowerShell 的隐式行为会在管道场景（如 | Select-String）下把
@@ -32,4 +32,14 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 & (Join-Path $repoRoot "examples\c-smoke\c-smoke.exe")
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+& (Join-Path $repoRoot "examples\c-smoke-terminal\build.ps1") -Profile $Profile
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+& (Join-Path $repoRoot "examples\c-smoke-terminal\c-smoke-terminal.exe")
 exit $LASTEXITCODE

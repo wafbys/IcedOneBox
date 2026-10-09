@@ -11,7 +11,13 @@
 //!
 //! PTY 的输入输出是**裸字节流**（含 VT 转义、可能被截断的多字节 UTF-8），
 //! 塞进 JSON 字符串既慢又易错，因此 `read` / `write` 用裸缓冲；只有 `spawn`
-//! 的配置走 JSON。此例外已记入 `spec/99-open-questions.md` 之外的终端规范。
+//! 的配置走 JSON。此例外已记入 `spec/90-ffi.md` 的「字节流例外」。
+//!
+//! ## 前置条件（Windows / ConPTY）
+//!
+//! 本模块只负责 PTY，不做终端仿真。ConPTY 建立后会发出 `ESC[6n`（DSR，查询
+//! 光标位置），**消费者必须应答 CPR（`ESC[row;colR`）**，否则子进程输出不会
+//! 继续。xterm.js 等真实终端会自动应答；非终端消费者（脚本、测试）需自行应答。
 
 #![allow(non_camel_case_types)]
 
@@ -309,18 +315,24 @@ pub unsafe extern "C" fn onebox_terminal_close(handle: *mut onebox_terminal) -> 
 
 /// 释放终端句柄。传入 NULL 安全；同一句柄只能释放一次。
 ///
+/// 与 `onebox_core_free` 一致，本函数返回返回码（正常路径为
+/// `ONEBOX_TERMINAL_OK`）。drop 会关闭会话（`Session::drop` → `close`）。
+///
 /// # Safety
 /// `handle` 必须是 `onebox_terminal_spawn` 返回且尚未释放的指针，或 NULL。
 #[no_mangle]
-pub unsafe extern "C" fn onebox_terminal_free(handle: *mut onebox_terminal) {
+pub unsafe extern "C" fn onebox_terminal_free(
+    handle: *mut onebox_terminal,
+) -> onebox_terminal_rc {
     clear_last_error();
     if handle.is_null() {
-        return;
+        return onebox_terminal_rc::ONEBOX_TERMINAL_OK;
     }
-    // drop 会关闭会话（Session::drop → close）。panic 不穿过 FFI 边界。
-    let _ = catch_unwind(AssertUnwindSafe(|| {
+    let outcome = catch_unwind(AssertUnwindSafe(|| {
         drop(unsafe { Box::from_raw(handle) });
+        onebox_terminal_rc::ONEBOX_TERMINAL_OK
     }));
+    outcome.unwrap_or_else(|_| on_panic())
 }
 
 /// 返回当前线程最后一次错误的文本。

@@ -9,6 +9,10 @@ examples/c-smoke/*.exe
 examples/c-smoke/*.obj
 examples/c-smoke/*.ilk
 examples/c-smoke/*.dll
+examples/c-smoke-terminal/*.exe
+examples/c-smoke-terminal/*.obj
+examples/c-smoke-terminal/*.ilk
+examples/c-smoke-terminal/*.dll
 
 # .NET 构建产物
 **/bin/
